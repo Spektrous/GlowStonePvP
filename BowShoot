@@ -1,0 +1,34 @@
+package me.spektrous.Listener;
+
+import me.spektrous.GlowStonePvP;
+
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class BowShoot implements Listener {
+	public GlowStonePvP plugin = GlowStonePvP.getInstance();
+
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onBowShoot(EntityShootBowEvent event) {
+		if (event.getEntity().getWorld().getName().equals("world")) {
+			if ((event.getEntity() instanceof Player)) {
+				final Player player = (Player) event.getEntity();
+				if (player.hasPermission("donator.nobreak")) {
+					final short dr = player.getItemInHand().getDurability();
+					final ItemStack item = player.getItemInHand();
+					new BukkitRunnable() {
+						public void run() {
+							item.setDurability(dr);
+							player.updateInventory();
+						}
+					}.runTaskLater(this.plugin, 1L);
+				}
+			}
+		}
+	}
+}
