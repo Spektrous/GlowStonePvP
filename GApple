@@ -1,0 +1,49 @@
+package me.spektrous.Listener;
+
+import me.spektrous.GlowStonePvP;
+
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class GApple implements Listener {
+	public GlowStonePvP plugin = GlowStonePvP.getInstance();
+
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onCosume(final PlayerItemConsumeEvent e) {
+		if (e.getItem().getType() == Material.GOLDEN_APPLE) {
+			final Player p = e.getPlayer();
+			new BukkitRunnable() {
+				public void run() {
+					if (e.getItem().getData().getData() == (short) 1) {
+						if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+							p.removePotionEffect(PotionEffectType.ABSORPTION);
+						}
+						if (p.hasPotionEffect(PotionEffectType.REGENERATION)) {
+							p.removePotionEffect(PotionEffectType.REGENERATION);
+							PotionEffect pe = new PotionEffect(
+									PotionEffectType.REGENERATION, 18 * 20, 4);
+							pe.apply(p);
+						}
+					} else {
+						if (p.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+							p.removePotionEffect(PotionEffectType.ABSORPTION);
+						}
+						if (p.hasPotionEffect(PotionEffectType.REGENERATION)) {
+							p.removePotionEffect(PotionEffectType.REGENERATION);
+							PotionEffect pe = new PotionEffect(
+									PotionEffectType.REGENERATION, 8 * 20, 0);
+							pe.apply(p);
+						}
+					}
+				}
+			}.runTaskLater(this.plugin, 1L);
+		}
+	}
+}
