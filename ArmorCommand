@@ -1,0 +1,70 @@
+package me.spektrous.commands;
+
+import java.util.List;
+
+import me.spektrous.GlowStonePvP;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+
+public class ArmorCommand implements CommandExecutor {
+	public GlowStonePvP plugin = GlowStonePvP.getInstance();
+	List<String> list = this.plugin.list;
+
+	public boolean onCommand(CommandSender sender, Command cmd, String label,
+			String[] args) {
+		if (!sender.isOp()) {
+			return true;
+		}
+		if ((sender instanceof ConsoleCommandSender)) {
+			Player player = Bukkit.getPlayer(args[0]);
+			if ((cmd.getName().equalsIgnoreCase("armor")) && (sender.isOp())
+					&& (args.length == 1)) {
+				for (int i = 0; i <= 3; i++) {
+					ItemStack[] items = player.getInventory()
+							.getArmorContents();
+
+					ItemStack item = items[i];
+					PlayerInventory inv = player.getInventory();
+					if (list.contains(getDisplayName(item))) {
+						if (inv.firstEmpty() != -1) {
+							inv.addItem(new ItemStack[] { item });
+						} else {
+							player.getWorld().dropItem(player.getLocation(),
+									item);
+						}
+
+						items[i] = null;
+
+						player.getInventory().setArmorContents(items);
+					}
+				}
+			} else {
+				sender.sendMessage(ChatColor.RED
+						+ "This command can only be executed from the console");
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public String getDisplayName(ItemStack item) {
+		String name;
+		try {
+			name = item.getItemMeta().getDisplayName();
+		} catch (Exception e) {
+			name = "";
+		}
+		if ((name != null) && (name.contains("§"))) {
+			name = name.substring(2);
+		}
+		return name;
+	}
+}
