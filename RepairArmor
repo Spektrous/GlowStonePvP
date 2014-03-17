@@ -1,0 +1,66 @@
+package me.spektrous.Listener;
+
+import me.spektrous.GlowStonePvP;
+
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class RepairArmor implements Listener {
+	public GlowStonePvP plugin = GlowStonePvP.getInstance();
+
+	@EventHandler
+	public void onHit(EntityDamageByEntityEvent e) {
+		if (e.getEntity().getWorld().getName().equals("world")) {
+			if (e.getCause() == DamageCause.FIRE
+					|| e.getCause() == DamageCause.FIRE_TICK
+					|| e.getCause() == DamageCause.ENTITY_ATTACK
+					|| e.getCause() == DamageCause.PROJECTILE) {
+				if (e.getEntity() instanceof Player) {
+					final Player damaged = (Player) e.getEntity();
+					if (damaged.hasPermission("donator.nobreak")) {
+						repair(damaged);
+					}
+				}
+			}
+			if (e.getDamager() instanceof Player) {
+				final Player damager = (Player) e.getDamager();
+				final short dr = damager.getInventory().getItemInHand()
+						.getDurability();
+				if (damager.hasPermission("donator.nobreak")) {
+					if (!(damager.getInventory().getItemInHand() == null)) {
+						if (damager.getInventory().getItemInHand().getType() == Material.DIAMOND_SWORD) {
+							new BukkitRunnable() {
+								@SuppressWarnings("deprecation")
+								public void run() {
+									damager.getInventory().getItemInHand()
+											.setDurability(dr);
+									damager.updateInventory();
+								}
+							}.runTaskLater(this.plugin, 1L);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void repair(final Player p) {
+		if (!(p.getInventory().getBoots() == null)) {
+			p.getInventory().getBoots().setDurability((short) 0);
+		}
+		if (!(p.getInventory().getChestplate() == null)) {
+			p.getInventory().getChestplate().setDurability((short) 0);
+		}
+		if (!(p.getInventory().getLeggings() == null)) {
+			p.getInventory().getLeggings().setDurability((short) 0);
+		}
+		if (!(p.getInventory().getHelmet() == null)) {
+			p.getInventory().getHelmet().setDurability((short) 0);
+		}
+	}
+}
