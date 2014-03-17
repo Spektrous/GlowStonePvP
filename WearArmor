@@ -1,0 +1,102 @@
+package me.spektrous.Listener;
+
+import java.util.List;
+
+import me.spektrous.GlowStonePvP;
+
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class WearArmor implements Listener {
+	public GlowStonePvP plugin = GlowStonePvP.getInstance();
+	final List<String> noWear = this.plugin.list;
+
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+
+		final Player player = (Player) event.getWhoClicked();
+		if ((event.isShiftClick())
+				&& (noWear.contains(getDisplayName(event.getCurrentItem())))
+				&& (!player.isOp()) && (!player.hasPermission("armor.wear"))
+				&& (event.getSlotType() != InventoryType.SlotType.ARMOR)) {
+			player.sendMessage("§cOnly donators can wear these items!");
+			event.setCancelled(true);
+
+			return;
+		}
+		if (event.getSlotType() == InventoryType.SlotType.ARMOR) {
+			final PlayerInventory inv = player.getInventory();
+
+			new BukkitRunnable() {
+				@SuppressWarnings("deprecation")
+				public void run() {
+					for (int i = 0; i <= 3; i++) {
+						ItemStack item = inv.getArmorContents()[i];
+						if ((noWear.contains(getDisplayName(item)))
+								&& (!player.hasPermission("armor.wear"))
+								&& (!player.isOp())) {
+							ItemStack[] contents = inv.getArmorContents();
+
+							contents[i] = null;
+
+							player.getInventory().setArmorContents(contents);
+
+							inv.addItem(new ItemStack[] { item });
+
+							player.sendMessage("§cOnly donators can use these items!");
+							player.updateInventory();
+							break;
+						}
+					}
+				}
+			}.runTaskLater(this.plugin, 1L);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		List<String> armor = this.plugin.list;
+
+		Player player = event.getPlayer();
+
+		ItemStack i = player.getItemInHand();
+
+		String name = getDisplayName(i);
+		if (i.hasItemMeta()) {
+			if (i.getItemMeta().hasDisplayName()) {
+				if (name.contains("§")) {
+					name = name.substring(2);
+				}
+				if ((armor.contains(name))
+						&& (!player.hasPermission("armor.wear"))
+						&& (!player.isOp())) {
+					event.setCancelled(true);
+
+					player.sendMessage("§cOnly donators can use these items!");
+					player.updateInventory();
+				}
+			}
+		}
+	}
+
+	public String getDisplayName(ItemStack item) {
+		String name;
+		try {
+			name = item.getItemMeta().getDisplayName();
+		} catch (Exception e) {
+			name = "";
+		}
+		if ((name != null) && (name.contains("§"))) {
+			name = name.substring(2);
+		}
+		return name;
+	}
+}
