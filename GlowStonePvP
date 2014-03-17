@@ -1,0 +1,222 @@
+package me.spektrous;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+
+import me.spektrous.Listener.BowShoot;
+import me.spektrous.Listener.GApple;
+import me.spektrous.Listener.ItemFrames;
+import me.spektrous.Listener.RepairArmor;
+import me.spektrous.Listener.SignListener;
+import me.spektrous.Listener.UseTools;
+import me.spektrous.Listener.WearArmor;
+import me.spektrous.commands.ArmorCommand;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitScheduler;
+
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+
+public class GlowStonePvP extends JavaPlugin implements Listener {
+	private Item it;
+	private static Item[] items = null;
+	public static Inventory myInventory;
+	public static GlowStonePvP instance;
+	public HashMap<String, Item[]> hm = new HashMap<String, Item[]>();
+	public HashMap<String, Inventory> trash = new HashMap<String, Inventory>();
+	List<Item> item = new ArrayList<Item>();
+	public List<String> list = new ArrayList<String>();
+	public List<String> ulist = new ArrayList<String>();
+	public ArrayList<String> cooldown = new ArrayList<String>();
+
+	public void onEnable() {
+		getConfig().options().copyDefaults(true);
+		trash.clear();
+		hm.clear();
+		list.clear();
+		list.addAll(getConfig().getStringList("DonatorArmor"));
+		ulist.clear();
+		ulist.addAll(getConfig().getStringList("UltimateArmor"));
+		instance = this;
+		PluginManager pm = Bukkit.getServer().getPluginManager();
+		pm.registerEvents(new SignListener(), this);
+		pm.registerEvents(new ItemFrames(), this);
+		pm.registerEvents(new RepairArmor(), this);
+		pm.registerEvents(new WearArmor(), this);
+		pm.registerEvents(new GApple(), this);
+		pm.registerEvents(new BowShoot(), this);
+		pm.registerEvents(new UseTools(), this);
+		pm.registerEvents(this, this);
+
+		// Config
+		File file = new File(getDataFolder(), File.separator + "config.yml");
+		if (!file.exists()) {
+			getConfig().addDefault("DefenderCanPickUp", false);
+			getConfig().addDefault("UltimateArmorPermission", "ultimate.wear");
+			getConfig().addDefault("ItemBleedID", 264);
+			getConfig().addDefault("ItemSprayAmount", 6);
+			getConfig().addDefault("Chance", 20);
+			getConfig().addDefault("BleedClearDrop", 30);
+			getConfig().addDefault("DonatorArmor", list);
+			getConfig().addDefault("UltimateArmor", ulist);
+			saveConfig();
+		}
+		if (list.isEmpty()) {
+			list.add("Donator Helmet");
+			list.add("Donator Chestplate");
+			list.add("Donator Leggings");
+			list.add("Donator Boots");
+			list.add("Donator Sword");
+			list.add("Donator Bow");
+			saveConfig();
+		}
+		if (ulist.isEmpty()) {
+			ulist.add("Ultimate Sword");
+			ulist.add("Ultimate Bow");
+			saveConfig();
+		}
+		saveConfig();
+		getCommand("armor").setExecutor(new ArmorCommand());
+		new BukkitRunnable() {
+			public void run() {
+				cooldown.clear();
+			}
+		}.runTaskTimer(this, 3L, 72000L);
+	}
+
+	public static GlowStonePvP getInstance() {
+		return instance;
+	}
+
+	// DiamondBleed
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onHit(final EntityDamageByEntityEvent e) {
+		WorldGuardPlugin guard = getWorldGuard();
+		RegionManager manager = guard
+				.getRegionManager(e.getEntity().getWorld());
+		ApplicableRegionSet set = manager.getApplicableRegions(e.getEntity()
+				.getLocation());
+		if (!set.allows(DefaultFlag.PVP)) {
+			return;
+		}
+		if ((!(e.getEntity() instanceof Player))
+				|| (!(e.getDamager() instanceof Player))) {
+			return;
+		}
+		final Player damaged = (Player) e.getEntity();
+		Player damager = (Player) e.getDamager();
+		if ((!damager.getItemInHand().getType().equals(Material.DIAMOND_SWORD))
+				&& (!damager.getItemInHand().getType().equals(Material.BOW))) {
+			return;
+		}
+		Random rand = new Random();
+		int number = rand.nextInt(getConfig().getInt("Chance"));
+		if (number == 0) {
+			if (ulist
+					.contains(UseTools.getDisplayName(damager.getItemInHand()))) {
+				if (!damager.hasPermission(getConfig().getString(
+						"UltimateArmorPermission"))) {
+					e.setCancelled(true);
+					return;
+				}
+			}
+			/*
+			 * final ItemStack is = new
+			 * ItemStack(getConfig().getInt("ItemBleedID")); new
+			 * BukkitRunnable() { int count = 0; public void run() { if(count ==
+			 * getConfig().getInt("ItemSprayAmount")) { return; } it =
+			 * e.getEntity
+			 * ().getWorld().dropItem(e.getEntity().getLocation().add(0.0D,
+			 * 1.0D, 0.0D), is); item.add(it); items = new Item[item.size()];
+			 * items = (Item[])item.toArray(items); hm.put(damaged.getName(),
+			 * items); count += 1; } }.runTaskTimer(this, 0L, 1L);
+			 */
+			final ItemStack is = new ItemStack(getConfig()
+					.getInt("ItemBleedID"));
+			BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+			scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+				int count = 0;
+
+				@Override
+				public void run() {
+					if (count == getConfig().getInt("ItemSprayAmount")) {
+						return;
+					}
+					it = e.getEntity()
+							.getWorld()
+							.dropItem(
+									e.getEntity().getLocation()
+											.add(0.0D, 1.0D, 0.0D), is);
+					item.add(it);
+					items = new Item[item.size()];
+					items = (Item[]) item.toArray(items);
+					hm.put(damaged.getName(), items);
+					count += 1;
+				}
+			}, 1L, 3L);
+			clearPick(damaged.getName(), items);
+		}
+	}
+
+	private void clearPick(final String name, final Item[] items) {
+		new BukkitRunnable() {
+			public void run() {
+				hm.remove(name);
+				hm.remove(items);
+			}
+		}.runTaskLater(this, getConfig().getInt("BleedClearDrop") * 20);
+	}
+
+	@EventHandler
+	public void onPlayerPick(PlayerPickupItemEvent event) {
+		if (getConfig().getBoolean("DefenderCanPickUp") == true) {
+			return;
+		}
+		if (!(event.getItem().getItemStack().getType() == Material.DIAMOND)) {
+			return;
+		}
+		Player player = event.getPlayer();
+		String name = player.getName();
+		if (hm.get(name) == null) {
+			return;
+		}
+		Item[] items = (Item[]) hm.get(name);
+
+		Item item = event.getItem();
+		for (Item i : items) {
+			if (item.equals(i)) {
+				event.setCancelled(true);
+			}
+		}
+	}
+
+	public static WorldGuardPlugin getWorldGuard() {
+		Plugin plugin = Bukkit.getServer().getPluginManager()
+				.getPlugin("WorldGuard");
+
+		if ((plugin == null) || (!(plugin instanceof WorldGuardPlugin))) {
+			return null;
+		}
+		return (WorldGuardPlugin) plugin;
+	}
+}
