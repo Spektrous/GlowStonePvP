@@ -1,0 +1,189 @@
+package me.spektrous.Listener;
+
+import me.spektrous.GlowStonePvP;
+
+import org.bukkit.Material;
+import org.bukkit.Rotation;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemFrame;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class ItemFrames implements Listener {
+	public GlowStonePvP plugin = GlowStonePvP.getInstance();
+
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onInteract(final PlayerInteractEntityEvent e) {
+		if (e.getPlayer().getWorld().getName().matches("world")) {
+			if (e.getRightClicked().getType() == EntityType.ITEM_FRAME) {
+				ItemFrame i = (ItemFrame) e.getRightClicked();
+				final ItemFrame iF = i;
+				final Rotation rt = i.getRotation();
+				new BukkitRunnable() {
+					public void run() {
+						iF.setRotation(rt);
+					}
+				}.runTaskLater(this.plugin, 3L);
+
+				if (i.getItem().getType().equals(Material.ARROW)) /*
+																 * &&
+																 * If.getItem(
+																 * ).getItemMeta
+																 * (
+																 * ).getDisplayName
+																 * () ==
+																 * "&eArrows"
+																 */{
+					ItemStack is = new ItemStack(Material.ARROW);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eArrows");
+					is.setItemMeta(im);
+					is.setAmount(32);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType() == Material.DIAMOND_HELMET /*
+																	 * &&
+																	 * If.getItem
+																	 * (
+																	 * ).getItemMeta
+																	 * ().
+																	 * getDisplayName
+																	 * () ==
+																	 * "&eSword"
+																	 */) {
+					ItemStack is = new ItemStack(Material.DIAMOND_HELMET);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eHelmet");
+					is.setItemMeta(im);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType() == Material.DIAMOND_CHESTPLATE /*
+																		 * &&
+																		 * If.
+																		 * getItem
+																		 * ().
+																		 * getItemMeta
+																		 * ().
+																		 * getDisplayName
+																		 * () ==
+																		 * "&eSword"
+																		 */) {
+					ItemStack is = new ItemStack(Material.DIAMOND_CHESTPLATE);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eChestPlate");
+					is.setItemMeta(im);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType() == Material.DIAMOND_LEGGINGS /*
+																		 * &&
+																		 * If.
+																		 * getItem
+																		 * ().
+																		 * getItemMeta
+																		 * ().
+																		 * getDisplayName
+																		 * () ==
+																		 * "&eSword"
+																		 */) {
+					ItemStack is = new ItemStack(Material.DIAMOND_LEGGINGS);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§ePants");
+					is.setItemMeta(im);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType() == Material.DIAMOND_BOOTS /*
+																	 * &&
+																	 * If.getItem
+																	 * (
+																	 * ).getItemMeta
+																	 * ().
+																	 * getDisplayName
+																	 * () ==
+																	 * "&eSword"
+																	 */) {
+					ItemStack is = new ItemStack(Material.DIAMOND_BOOTS);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eBoots");
+					is.setItemMeta(im);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType() == Material.DIAMOND_SWORD /*
+																	 * &&
+																	 * If.getItem
+																	 * (
+																	 * ).getItemMeta
+																	 * ().
+																	 * getDisplayName
+																	 * () ==
+																	 * "&eSword"
+																	 */) {
+					ItemStack is = new ItemStack(Material.DIAMOND_SWORD);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eSword");
+					is.setItemMeta(im);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType() == Material.BOW /*
+														 * &&
+														 * If.getItem().getItemMeta
+														 * ().getDisplayName()
+														 * == "&eBow"
+														 */) {
+					ItemStack is = new ItemStack(Material.BOW);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eBow");
+					is.setItemMeta(im);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType().equals(Material.GOLDEN_APPLE)
+						&& !(i.getItem().getData().getData() == 1)) {
+					ItemStack is = new ItemStack(Material.GOLDEN_APPLE);
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName("§eApples");
+					is.setItemMeta(im);
+					is.setAmount(32);
+					e.getPlayer().getInventory().addItem(is);
+					return;
+				}
+				if (i.getItem().getType().equals(Material.GOLDEN_APPLE)
+						&& i.getItem().getData().getData() == 1) {
+					if (!plugin.cooldown.contains(e.getPlayer().getName())) {
+						ItemStack is = new ItemStack(Material.GOLDEN_APPLE, 1,
+								(short) 1);
+						ItemMeta im = is.getItemMeta();
+						im.setDisplayName("§bGolden Apple");
+						is.setItemMeta(im);
+						if (e.getPlayer().getInventory().firstEmpty() != -1) {
+							e.getPlayer().getInventory().addItem(is);
+						} else {
+							e.getPlayer().sendMessage(
+									"§cYour Inventory is full!");
+							return;
+						}
+						plugin.cooldown.add(e.getPlayer().getName());
+						e.getPlayer()
+								.sendMessage(
+										"§cYou get 1 God apple every hour. Donate for more God Apples.");
+					} else {
+						e.getPlayer()
+								.sendMessage(
+										"§cYou get 1 God apple every hour. Donate for more God Apples.");
+					}
+					return;
+				}
+			}
+		}
+	}
+}
